@@ -17,6 +17,7 @@ public class JokeApp {
         JokeLoader jokeLoader = new JokeLoader();
         int jokeId = getJokeId();
         List<String> joke = jokeLoader.loadJoke(jokeId);
+        System.out.println("Here goes the joke:");
         joke.forEach(System.out::println);
     }
 
