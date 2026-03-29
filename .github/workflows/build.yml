@@ -110,3 +110,36 @@ jobs:
 
       - name: Test project
         run: ./mvnw test
+
+  build-amper:
+    name: "Build Amper"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./amper
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Build project
+        run: ./amper build
+
+      - name: Verify program
+        run: |
+          OUTPUT=$(./amper run)
+          echo "$OUTPUT"
+          
+          if echo "$OUTPUT" | grep -q "Here goes the joke:"; then
+            exit 0
+          else
+            exit 1
+          fi
+
+      - name: Test project
+        run: ./amper test

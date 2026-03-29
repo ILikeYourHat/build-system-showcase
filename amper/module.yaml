@@ -1,0 +1,14 @@
+product: jvm/app
+
+layout: maven-like
+
+settings:
+  jvm:
+    mainClass: com.example.JokeApp
+    release: 21
+
+dependencies:
+  - commons-io:commons-io:2.21.0
+
+test-dependencies:
+  - junit:junit:4.13.2
