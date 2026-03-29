@@ -99,7 +99,7 @@ jobs:
 
       - name: Verify program
         run: |
-          OUTPUT=$(java -jar target\joke-app-0.1.0-jar-with-dependencies.jar)
+          OUTPUT=$(java -jar target/joke-app-0.1.0-jar-with-dependencies.jar)
           echo "$OUTPUT"
           
           if echo "$OUTPUT" | grep -q "Here goes the joke:"; then
