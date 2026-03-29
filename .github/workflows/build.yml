@@ -30,15 +30,12 @@ jobs:
 
       - name: Verify program
         run: |
-          set -euo pipefail
           OUTPUT=$(./gradlew run)
           echo "$OUTPUT"
   
           if echo "$OUTPUT" | grep -q "Here goes thee joke:"; then
-            echo "Assertion passed, program compiled correctly"
             exit 0
           else
-            echo "Assertion failed"
             exit 1
           fi
 
