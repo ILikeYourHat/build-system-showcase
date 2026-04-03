@@ -1,0 +1,41 @@
+name: "Bazel"
+on:
+  push:
+    branches:
+      - '**'
+jobs:
+  build-bazel:
+    name: "Build Bazel"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./bazel
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.19.0
+
+      - name: Build project
+        run: bazel build //:JokeApp
+
+      - name: Verify program
+        run: |
+          OUTPUT=$(bazel run //:JokeApp)
+          echo "$OUTPUT"
+          
+          if echo "$OUTPUT" | grep -q "Here goes the joke:"; then
+            exit 0
+          else
+            exit 1
+          fi
+
+      - name: Test project
+        run: bazel test //:JokeAppTest

@@ -1,0 +1,38 @@
+name: "Maven"
+on:
+  push:
+    branches:
+      - '**'
+jobs:
+  build-maven:
+    name: "Build Maven"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./maven
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Build project
+        run: ./mvnw compile assembly:single
+
+      - name: Verify program
+        run: |
+          OUTPUT=$(java -jar target/joke-app-0.1.0-jar-with-dependencies.jar)
+          echo "$OUTPUT"
+          
+          if echo "$OUTPUT" | grep -q "Here goes the joke:"; then
+            exit 0
+          else
+            exit 1
+          fi
+
+      - name: Test project
+        run: ./mvnw test
