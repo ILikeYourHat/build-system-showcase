@@ -9,7 +9,7 @@ import java.util.List;
 public class JokeLoader {
 
     public List<String> loadJoke(int id) {
-        InputStream stream = ClassLoader.getSystemResourceAsStream("joke_" + id + ".txt");
+        InputStream stream = getClass().getClassLoader().getResourceAsStream("joke_" + id + ".txt");
         if (stream != null) {
             return IOUtils.readLines(stream, Charset.defaultCharset());
         } else {

@@ -1,0 +1,41 @@
+name: "sbt"
+on:
+  push:
+    branches:
+      - '**'
+jobs:
+  build-sbt:
+    name: "Build sbt"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./sbt
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Build project
+        run: sbt compile
+
+      - name: Verify program
+        run: |
+          OUTPUT=$(sbt run)
+          echo "$OUTPUT"
+          
+          if echo "$OUTPUT" | grep -q "Here goes the joke:"; then
+            exit 0
+          else
+            exit 1
+          fi
+
+      - name: Test project
+        run: sbt test

@@ -1,0 +1,2 @@
+Q: Why did the Java developer teach his young kids about single quotes?
+A: Because they build character.
