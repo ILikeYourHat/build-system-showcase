@@ -2,15 +2,15 @@
 
 Building app:
 ```bash
-bazelisk build //:JokeApp
+bazel build //:JokeApp
 ```
 
 Running app:
 ```bash
-bazelisk run //:JokeApp
+bazel run //:JokeApp
 ```
 
 Testing app:
 ```bash
-bazelisk test //:JokeAppTest
+bazel test //:JokeAppTest
 ```

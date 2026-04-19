@@ -1,0 +1,79 @@
+name: "Build"
+on:
+  push:
+    branches:
+      - '**'
+jobs:
+  build-bazel:
+    name: "Build ${{ matrix.tool }}"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - tool: "amper"
+            compileScript: "./amper build"
+            runScript: "./amper run"
+            testScript: "./amper test"
+          - tool: "bazel"
+            compileScript: "bazel build //:JokeApp"
+            runScript: "bazel run //:JokeApp"
+            testScript: "bazel test //:JokeAppTest"
+          - tool: "gradle"
+            compileScript: "./gradlew assemble"
+            runScript: "./gradlew run"
+            testScript: "./gradlew test"
+          - tool: "maven"
+            compileScript: "./mvnw compile"
+            runScript: "./mvnw compile exec:java"
+            testScript: "./mvnw test"
+          - tool: "mill"
+            compileScript: "./mill compile"
+            runScript: "./mill run"
+            testScript: "./mill test"
+          - tool: "sbt"
+            compileScript: "sbt compile"
+            runScript: "sbt run"
+            testScript: "sbt test"
+    defaults:
+      run:
+        working-directory: ./${{ matrix.tool }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup Bazel
+        if: ${{ matrix.tool }} == "bazel"
+        uses: bazel-contrib/setup-bazel@0.19.0
+
+      - name: Setup Gradle
+        if: ${{ matrix.tool }} == "gradle"
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-disabled: true
+
+      - name: Setup sbt
+        if: ${{ matrix.tool }} == "sbt"
+        uses: sbt/setup-sbt@v1
+
+      - name: Compile project
+        run: ${{ matrix.compileScript }}
+
+      - name: Verify program
+        run: |
+          OUTPUT=$(${{ matrix.runScript }})
+          echo "$OUTPUT"
+          
+          if echo "$OUTPUT" | grep -q "Here goes the joke:"; then
+            exit 0
+          else
+            exit 1
+          fi
+
+      - name: Test project
+        run: ${{ matrix.testScript }}
