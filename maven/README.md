@@ -2,12 +2,12 @@
 
 Building app:
 ```bash
-./mvnw compile assembly:single
+./mvnw compile
 ```
 
 Running app:
 ```bash
-java -jar target\joke-app-0.1.0-jar-with-dependencies.jar
+./mvnw compile exec:java
 ```
 
 Testing app:
