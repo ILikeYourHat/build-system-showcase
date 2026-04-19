@@ -48,17 +48,17 @@ jobs:
           distribution: temurin
 
       - name: Setup Bazel
-        if: ${{ matrix.tool }} == "bazel"
+        if: ${{ matrix.tool == "bazel" }}
         uses: bazel-contrib/setup-bazel@0.19.0
 
       - name: Setup Gradle
-        if: ${{ matrix.tool }} == "gradle"
+        if: ${{ matrix.tool == "gradle" }}
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-disabled: true
 
       - name: Setup sbt
-        if: ${{ matrix.tool }} == "sbt"
+        if: ${{ matrix.tool == "sbt" }}
         uses: sbt/setup-sbt@v1
 
       - name: Compile project
