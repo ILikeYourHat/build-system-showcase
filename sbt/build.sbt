@@ -6,7 +6,7 @@ lazy val root = project
     name := "Joke App",
     javacOptions ++= Seq("-source", "21"),
     libraryDependencies ++= Seq(
-      "commons-io" % "commons-io" % "2.21.0",
+      "commons-io" % "commons-io" % "2.22.0",
       "com.github.sbt" % "junit-interface" % "0.13.3" % Test,
       "junit" % "junit" % "4.13.2" % Test
     )

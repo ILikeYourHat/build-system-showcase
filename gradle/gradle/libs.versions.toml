@@ -1,5 +1,5 @@
 [versions]
-apache-commons-io = "2.21.0"
+apache-commons-io = "2.22.0"
 junit = "4.13.2"
 
 [libraries]

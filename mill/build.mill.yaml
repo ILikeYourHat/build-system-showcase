@@ -1,7 +1,7 @@
 extends: MavenModule
 
 mvnDeps:
-  - commons-io:commons-io:2.21.0
+  - commons-io:commons-io:2.22.0
 
 object test:
   extends: [MavenTests, TestModule.Junit4]
