@@ -2,15 +2,15 @@
 
 Building app:
 ```bash
-bazel build //:JokeApp
+bazel build //...
 ```
 
 Running app:
 ```bash
-bazel run //:JokeApp
+bazel run :JokeApp
 ```
 
 Testing app:
 ```bash
-bazel test //:JokeAppTest
+bazel test //...
 ```
