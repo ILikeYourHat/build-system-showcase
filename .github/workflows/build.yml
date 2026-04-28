@@ -4,10 +4,11 @@ on:
     branches:
       - '**'
 jobs:
-  build-bazel:
+  build-all:
     name: "Build ${{ matrix.tool }}"
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - tool: "amper"
