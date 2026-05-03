@@ -1,0 +1,4 @@
+build
+lib
+!lib/bld/bld-wrapper.jar
+!lib/bld/bld-wrapper.properties
