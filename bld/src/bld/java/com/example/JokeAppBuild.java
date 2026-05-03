@@ -24,9 +24,8 @@ public class JokeAppBuild extends Project {
         scope(compile)
             .include(dependency("commons-io", "commons-io", version(2,22,0)));
         scope(test)
-            .include(dependency("org.junit.vintage", "junit-vintage-engine", version(6,0,3)))
-            .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(6,0,3)))
-            .include(dependency("junit:junit:4.13.2"));  // unfortunately, bld is not compatible with JUnit4 :(
+            .include(dependency("org.junit.jupiter", "junit-jupiter-engine", version(6,0,3)))
+            .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(6,0,3)));
     }
 
     public static void main(String[] args) {

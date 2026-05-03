@@ -7,7 +7,6 @@ lazy val root = project
     javacOptions ++= Seq("-source", "21"),
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.22.0",
-      "com.github.sbt" % "junit-interface" % "0.13.3" % Test,
-      "junit" % "junit" % "4.13.2" % Test
+      "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test,
     )
   )

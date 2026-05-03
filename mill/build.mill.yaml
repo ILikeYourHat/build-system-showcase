@@ -4,8 +4,7 @@ mvnDeps:
   - commons-io:commons-io:2.22.0
 
 object test:
-  extends: [MavenTests, TestModule.Junit4]
-  mvnDeps:
-    - junit:junit:4.13.2
+  extends: [MavenTests, TestModule.Junit6]
+  jupiterVersion: "6.0.3"
 
 jvmVersion: 21

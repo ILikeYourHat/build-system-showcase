@@ -1,20 +1,21 @@
 bazel_dep(name = "rules_java", version = "9.6.1")
 bazel_dep(name = "rules_jvm_external", version = "7.0")
+bazel_dep(name = "contrib_rules_jvm", version = "0.33.0")
 
 maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
-
 maven.install(
     name = "maven",
     artifacts = [
         "commons-io:commons-io:2.22.0",
-        "junit:junit:4.13.2",
+        "org.junit.jupiter:junit-jupiter:6.0.3",
+        "org.junit.platform:junit-platform-launcher:6.0.3",
+        "org.junit.platform:junit-platform-reporting:6.0.3",
     ],
+    fetch_sources = True,
+    known_contributing_modules = ["bazel_worker_java"],
+    lock_file = "//:maven_install.json",
     repositories = [
         "https://repo1.maven.org/maven2",
     ],
-    fetch_sources = True,
-    lock_file = "//:maven_install.json",
-    known_contributing_modules = ["bazel_worker_java"]
 )
-
 use_repo(maven, "maven")
