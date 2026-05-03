@@ -1,7 +1,5 @@
 product: jvm/app
 
-layout: maven-like
-
 settings:
   jvm:
     mainClass: com.example.JokeApp
