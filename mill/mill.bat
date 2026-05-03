@@ -1,199 +1,296 @@
-#!/usr/bin/env sh
+@echo off
 
-set -e
+setlocal enabledelayedexpansion
 
-if [ -z "${DEFAULT_MILL_VERSION}" ] ; then DEFAULT_MILL_VERSION="1.1.5"; fi
+if [!DEFAULT_MILL_VERSION!]==[] ( set "DEFAULT_MILL_VERSION=1.1.6" )
 
-if [ -z "${GITHUB_RELEASE_CDN}" ] ; then GITHUB_RELEASE_CDN=""; fi
+if [!MILL_GITHUB_RELEASE_CDN!]==[] ( set "MILL_GITHUB_RELEASE_CDN=" )
 
-if [ -z "$MILL_MAIN_CLI" ] ; then MILL_MAIN_CLI="${0}"; fi
+if [!MILL_MAIN_CLI!]==[] ( set "MILL_MAIN_CLI=%~f0" )
 
-MILL_REPO_URL="https://github.com/com-lihaoyi/mill"
+set "MILL_REPO_URL=https://github.com/com-lihaoyi/mill"
 
-MILL_BUILD_SCRIPT=""
+SET MILL_BUILD_SCRIPT=
 
-if [ -f "build.mill" ] ; then
-  MILL_BUILD_SCRIPT="build.mill"
-elif [ -f "build.mill.scala" ] ; then
-  MILL_BUILD_SCRIPT="build.mill.scala"
-elif [ -f "build.sc" ] ; then
-  MILL_BUILD_SCRIPT="build.sc"
-fi
+if exist "build.mill" (
+  set MILL_BUILD_SCRIPT=build.mill
+) else (
+    if exist "build.mill.scala" (
+      set MILL_BUILD_SCRIPT=build.mill.scala
+    ) else (
+        if exist "build.sc" (
+          set MILL_BUILD_SCRIPT=build.sc
+        ) else (
+            rem no-op
+        )
+    )
+)
 
-# `s/.*://`:
-#   This is a greedy match that removes everything from the beginning of the line up to (and including) the last
-#   colon (:). This effectively isolates the value part of the declaration.
-#
-#  `s/#.*//`:
-#    This removes any comments at the end of the line.
-#
-#  `s/['\"]//g`:
-#    This removes all single and double quotes from the string, wherever they appear (g is for "global").
-#
-#  `s/^[[:space:]]*//; s/[[:space:]]*$//`:
-#    These two expressions trim any leading or trailing whitespace ([[:space:]] matches spaces and tabs).
-TRIM_VALUE_SED="s/.*://; s/#.*//; s/['\"]//g; s/^[[:space:]]*//; s/[[:space:]]*$//"
+if [!MILL_VERSION!]==[] (
+  if exist .mill-version (
+    set /p MILL_VERSION=<.mill-version
+  ) else (
+    if exist .config\mill-version (
+      set /p MILL_VERSION=<.config\mill-version
+    ) else (
+      rem Determine which config file to use for version extraction
+      set "MILL_VERSION_CONFIG_FILE="
+      set "MILL_VERSION_SEARCH_PATTERN="
 
-if [ -z "${MILL_VERSION}" ] ; then
-  if [ -f ".mill-version" ] ; then
-    MILL_VERSION="$(tr '\r' '\n' < .mill-version | head -n 1 2> /dev/null)"
-  elif [ -f ".config/mill-version" ] ; then
-    MILL_VERSION="$(tr '\r' '\n' < .config/mill-version | head -n 1 2> /dev/null)"
-  elif [ -f "build.mill.yaml" ] ; then
-    MILL_VERSION="$(grep -E "mill-version:" "build.mill.yaml" | sed -E "$TRIM_VALUE_SED")"
-  elif [ -n "${MILL_BUILD_SCRIPT}" ] ; then
-    MILL_VERSION="$(grep -E "//\|.*mill-version" "${MILL_BUILD_SCRIPT}" | sed -E "$TRIM_VALUE_SED")"
-  fi
-fi
+      if exist build.mill.yaml (
+        set "MILL_VERSION_CONFIG_FILE=build.mill.yaml"
+        set "MILL_VERSION_SEARCH_PATTERN=mill-version:"
+      ) else (
+        if not "%MILL_BUILD_SCRIPT%"=="" (
+          set "MILL_VERSION_CONFIG_FILE=%MILL_BUILD_SCRIPT%"
+          set "MILL_VERSION_SEARCH_PATTERN=//\|.*mill-version"
+        )
+      )
 
-if [ -z "${MILL_VERSION}" ] ; then MILL_VERSION="${DEFAULT_MILL_VERSION}"; fi
+      rem Process the config file if found
+      if not "!MILL_VERSION_CONFIG_FILE!"=="" (
+        rem Find the line and process it
+        for /f "tokens=*" %%a in ('findstr /R /C:"!MILL_VERSION_SEARCH_PATTERN!" "!MILL_VERSION_CONFIG_FILE!"') do (
+            set "line=%%a"
 
-MILL_USER_CACHE_DIR="${XDG_CACHE_HOME:-${HOME}/.cache}/mill"
+            rem --- 1. Replicate sed 's/.*://' ---
+            rem This removes everything up to and including the first colon
+            set "line=!line:*:=!"
 
-if [ -z "${MILL_FINAL_DOWNLOAD_FOLDER}" ] ; then MILL_FINAL_DOWNLOAD_FOLDER="${MILL_USER_CACHE_DIR}/download"; fi
+            rem --- 2. Replicate sed 's/#.*//' ---
+            rem Split on '#' and keep the first part
+            for /f "tokens=1 delims=#" %%b in ("!line!") do (
+                set "line=%%b"
+            )
 
-MILL_NATIVE_SUFFIX="-native"
-MILL_JVM_SUFFIX="-jvm"
-ARTIFACT_SUFFIX=""
+            rem --- 3. Replicate sed 's/['"]//g' ---
+            rem Remove all quotes
+            set "line=!line:'=!"
+            set "line=!line:"=!"
 
-# Check if GLIBC version is at least the required version
-# Returns 0 (true) if GLIBC >= required version, 1 (false) otherwise
-check_glibc_version() {
-  required_version="2.39"
-  required_major=$(echo "$required_version" | cut -d. -f1)
-  required_minor=$(echo "$required_version" | cut -d. -f2)
-  # Get GLIBC version from ldd --version (first line contains version like "ldd (GNU libc) 2.31")
-  glibc_version=$(ldd --version 2>/dev/null | head -n 1 | grep -oE '[0-9]+\.[0-9]+$' || echo "")
-  if [ -z "$glibc_version" ]; then
-    # If we can't determine GLIBC version, assume it's too old
-    return 1
-  fi
-  glibc_major=$(echo "$glibc_version" | cut -d. -f1)
-  glibc_minor=$(echo "$glibc_version" | cut -d. -f2)
-  if [ "$glibc_major" -gt "$required_major" ]; then
-    return 0
-  elif [ "$glibc_major" -eq "$required_major" ] && [ "$glibc_minor" -ge "$required_minor" ]; then
-    return 0
-  else
-    return 1
-  fi
-}
+            rem --- 4. Replicate sed's trim/space removal ---
+            rem Remove all space characters from the result. This is more robust.
+            set "MILL_VERSION=!line: =!"
 
-set_artifact_suffix() {
-  if [ "$(uname -s 2>/dev/null | cut -c 1-5)" = "Linux" ]; then
-    # Native binaries require new enough GLIBC; fall back to JVM launcher if older
-    if ! check_glibc_version; then
-      return
-    fi
-    if [ "$(uname -m)" = "aarch64" ]; then ARTIFACT_SUFFIX="-native-linux-aarch64"
-    else ARTIFACT_SUFFIX="-native-linux-amd64"; fi
-  elif [ "$(uname)" = "Darwin" ]; then
-    if [ "$(uname -m)" = "arm64" ]; then ARTIFACT_SUFFIX="-native-mac-aarch64"
-    else ARTIFACT_SUFFIX="-native-mac-amd64"; fi
-  else
-    echo "This native mill launcher supports only Linux and macOS." 1>&2
-    exit 1
-  fi
-}
+            rem We found the version, so we can exit the loop
+            goto :version_found
+        )
 
-case "$MILL_VERSION" in
-  *"$MILL_NATIVE_SUFFIX")
-    MILL_VERSION=${MILL_VERSION%"$MILL_NATIVE_SUFFIX"}
-    set_artifact_suffix
-    ;;
+        :version_found
+        rem no-op
+      )
+    )
+  )
+)
 
-  *"$MILL_JVM_SUFFIX")
-    MILL_VERSION=${MILL_VERSION%"$MILL_JVM_SUFFIX"}
-    ;;
+if [!MILL_VERSION!]==[] (
+    set MILL_VERSION=%DEFAULT_MILL_VERSION%
+)
 
-  *)
-    case "$MILL_VERSION" in
-      0.1.* | 0.2.* | 0.3.* | 0.4.* | 0.5.* | 0.6.* | 0.7.* | 0.8.* | 0.9.* | 0.10.* | 0.11.* | 0.12.*)
-        ;;
-      *)
-        set_artifact_suffix
-        ;;
-    esac
-    ;;
-esac
+if [!MILL_FINAL_DOWNLOAD_FOLDER!]==[] set MILL_FINAL_DOWNLOAD_FOLDER=%USERPROFILE%\.cache\mill\download
 
-MILL="${MILL_FINAL_DOWNLOAD_FOLDER}/$MILL_VERSION$ARTIFACT_SUFFIX"
+rem without bat file extension, cmd doesn't seem to be able to run it
 
-# If not already downloaded, download it
-if [ ! -s "${MILL}" ] || [ "$MILL_TEST_DRY_RUN_LAUNCHER_SCRIPT" = "1" ] ; then
-  case $MILL_VERSION in
-    0.0.* | 0.1.* | 0.2.* | 0.3.* | 0.4.*)
-      MILL_DOWNLOAD_SUFFIX=""
-      MILL_DOWNLOAD_FROM_MAVEN=0
-      ;;
-    0.5.* | 0.6.* | 0.7.* | 0.8.* | 0.9.* | 0.10.* | 0.11.0-M*)
-      MILL_DOWNLOAD_SUFFIX="-assembly"
-      MILL_DOWNLOAD_FROM_MAVEN=0
-      ;;
-    *)
-      MILL_DOWNLOAD_SUFFIX="-assembly"
-      MILL_DOWNLOAD_FROM_MAVEN=1
-      ;;
-  esac
-  case $MILL_VERSION in
-    0.12.0 | 0.12.1 | 0.12.2 | 0.12.3 | 0.12.4 | 0.12.5 | 0.12.6 | 0.12.7 | 0.12.8 | 0.12.9 | 0.12.10 | 0.12.11)
-      MILL_DOWNLOAD_EXT="jar"
-      ;;
-    0.12.*)
-      MILL_DOWNLOAD_EXT="exe"
-      ;;
-    0.*)
-      MILL_DOWNLOAD_EXT="jar"
-      ;;
-    *)
-      MILL_DOWNLOAD_EXT="exe"
-      ;;
-  esac
+set "MILL_NATIVE_SUFFIX=-native"
+set "MILL_JVM_SUFFIX=-jvm"
+set "MILL_FULL_VERSION=%MILL_VERSION%"
+set "MILL_DOWNLOAD_EXT=.bat"
+set "ARTIFACT_SUFFIX="
+REM Check if MILL_VERSION contains MILL_NATIVE_SUFFIX
+echo !MILL_VERSION! | findstr /C:"%MILL_NATIVE_SUFFIX%" >nul
+if !errorlevel! equ 0 (
+    set "MILL_VERSION=%MILL_VERSION:-native=%"
+    REM -native images compiled with graal do not support windows-arm
+    REM https://github.com/oracle/graal/issues/9215
+    IF /I NOT "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
+        set "ARTIFACT_SUFFIX=-native-windows-amd64"
+        set "MILL_DOWNLOAD_EXT=.exe"
+    ) else (
+        rem no-op
+    )
+) else (
+    echo !MILL_VERSION! | findstr /C:"%MILL_JVM_SUFFIX%" >nul
+    if !errorlevel! equ 0 (
+        set "MILL_VERSION=%MILL_VERSION:-jvm=%"
+    ) else (
+        set "SKIP_VERSION=false"
+        set "MILL_PREFIX=%MILL_VERSION:~0,4%"
+        if "!MILL_PREFIX!"=="0.1." set "SKIP_VERSION=true"
+        if "!MILL_PREFIX!"=="0.2." set "SKIP_VERSION=true"
+        if "!MILL_PREFIX!"=="0.3." set "SKIP_VERSION=true"
+        if "!MILL_PREFIX!"=="0.4." set "SKIP_VERSION=true"
+        if "!MILL_PREFIX!"=="0.5." set "SKIP_VERSION=true"
+        if "!MILL_PREFIX!"=="0.6." set "SKIP_VERSION=true"
+        if "!MILL_PREFIX!"=="0.7." set "SKIP_VERSION=true"
+        if "!MILL_PREFIX!"=="0.8." set "SKIP_VERSION=true"
+        if "!MILL_PREFIX!"=="0.9." set "SKIP_VERSION=true"
+        set "MILL_PREFIX=%MILL_VERSION:~0,5%"
+        if "!MILL_PREFIX!"=="0.10." set "SKIP_VERSION=true"
+        if "!MILL_PREFIX!"=="0.11." set "SKIP_VERSION=true"
+        if "!MILL_PREFIX!"=="0.12." set "SKIP_VERSION=true"
 
-  MILL_TEMP_DOWNLOAD_FILE="${MILL_OUTPUT_DIR:-out}/mill-temp-download"
-  mkdir -p "$(dirname "${MILL_TEMP_DOWNLOAD_FILE}")"
+        if "!SKIP_VERSION!"=="false" (
+            IF /I NOT "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
+                set "ARTIFACT_SUFFIX=-native-windows-amd64"
+                set "MILL_DOWNLOAD_EXT=.exe"
+            )
+        ) else (
+            rem no-op
+        )
+    )
+)
 
-  if [ "$MILL_DOWNLOAD_FROM_MAVEN" = "1" ] ; then
-    MILL_DOWNLOAD_URL="https://repo1.maven.org/maven2/com/lihaoyi/mill-dist${ARTIFACT_SUFFIX}/${MILL_VERSION}/mill-dist${ARTIFACT_SUFFIX}-${MILL_VERSION}.${MILL_DOWNLOAD_EXT}"
-  else
-    MILL_VERSION_TAG=$(echo "$MILL_VERSION" | sed -E 's/([^-]+)(-M[0-9]+)?(-.*)?/\1\2/')
-    MILL_DOWNLOAD_URL="${GITHUB_RELEASE_CDN}${MILL_REPO_URL}/releases/download/${MILL_VERSION_TAG}/${MILL_VERSION}${MILL_DOWNLOAD_SUFFIX}"
-    unset MILL_VERSION_TAG
-  fi
+set MILL=%MILL_FINAL_DOWNLOAD_FOLDER%\!MILL_FULL_VERSION!!MILL_DOWNLOAD_EXT!
+
+set MILL_RESOLVE_DOWNLOAD=
+
+if not exist "%MILL%" (
+  set MILL_RESOLVE_DOWNLOAD=true
+) else (
+    if defined MILL_TEST_DRY_RUN_LAUNCHER_SCRIPT (
+        set MILL_RESOLVE_DOWNLOAD=true
+    ) else (
+        rem no-op
+    )
+)
 
 
-  if [ "$MILL_TEST_DRY_RUN_LAUNCHER_SCRIPT" = "1" ] ; then
-    echo "$MILL_DOWNLOAD_URL"
-    echo "$MILL"
-    exit 0
-  fi
+if [!MILL_RESOLVE_DOWNLOAD!]==[true] (
+    set MILL_VERSION_PREFIX=%MILL_VERSION:~0,4%
+    set MILL_SHORT_VERSION_PREFIX=%MILL_VERSION:~0,2%
+    rem Since 0.5.0
+    set MILL_DOWNLOAD_SUFFIX=-assembly
+    rem Since 0.11.0
+    set MILL_DOWNLOAD_FROM_MAVEN=1
+    if [!MILL_VERSION_PREFIX!]==[0.0.] (
+        set MILL_DOWNLOAD_SUFFIX=
+        set MILL_DOWNLOAD_FROM_MAVEN=0
+    )
+    if [!MILL_VERSION_PREFIX!]==[0.1.] (
+        set MILL_DOWNLOAD_SUFFIX=
+        set MILL_DOWNLOAD_FROM_MAVEN=0
+    )
+    if [!MILL_VERSION_PREFIX!]==[0.2.] (
+        set MILL_DOWNLOAD_SUFFIX=
+        set MILL_DOWNLOAD_FROM_MAVEN=0
+    )
+    if [!MILL_VERSION_PREFIX!]==[0.3.] (
+        set MILL_DOWNLOAD_SUFFIX=
+        set MILL_DOWNLOAD_FROM_MAVEN=0
+    )
+    if [!MILL_VERSION_PREFIX!]==[0.4.] (
+        set MILL_DOWNLOAD_SUFFIX=
+        set MILL_DOWNLOAD_FROM_MAVEN=0
+    )
+    if [!MILL_VERSION_PREFIX!]==[0.5.] set MILL_DOWNLOAD_FROM_MAVEN=0
+    if [!MILL_VERSION_PREFIX!]==[0.6.] set MILL_DOWNLOAD_FROM_MAVEN=0
+    if [!MILL_VERSION_PREFIX!]==[0.7.] set MILL_DOWNLOAD_FROM_MAVEN=0
+    if [!MILL_VERSION_PREFIX!]==[0.8.] set MILL_DOWNLOAD_FROM_MAVEN=0
+    if [!MILL_VERSION_PREFIX!]==[0.9.] set MILL_DOWNLOAD_FROM_MAVEN=0
 
-  echo "Downloading mill ${MILL_VERSION} from ${MILL_DOWNLOAD_URL} ..." 1>&2
-  curl -f -L -o "${MILL_TEMP_DOWNLOAD_FILE}" "${MILL_DOWNLOAD_URL}"
+    set MILL_VERSION_PREFIX=%MILL_VERSION:~0,5%
+    if [!MILL_VERSION_PREFIX!]==[0.10.] set MILL_DOWNLOAD_FROM_MAVEN=0
 
-  chmod +x "${MILL_TEMP_DOWNLOAD_FILE}"
+    set MILL_VERSION_PREFIX=%MILL_VERSION:~0,8%
+    if [!MILL_VERSION_PREFIX!]==[0.11.0-M] set MILL_DOWNLOAD_FROM_MAVEN=0
 
-  mkdir -p "${MILL_FINAL_DOWNLOAD_FOLDER}"
-  mv "${MILL_TEMP_DOWNLOAD_FILE}" "${MILL}"
+    set MILL_VERSION_PREFIX=%MILL_VERSION:~0,5%
+    set DOWNLOAD_EXT=exe
+    if [!MILL_SHORT_VERSION_PREFIX!]==[0.] set DOWNLOAD_EXT=jar
+    if [!MILL_VERSION_PREFIX!]==[0.12.] set DOWNLOAD_EXT=exe
+    if [!MILL_VERSION!]==[0.12.0] set DOWNLOAD_EXT=jar
+    if [!MILL_VERSION!]==[0.12.1] set DOWNLOAD_EXT=jar
+    if [!MILL_VERSION!]==[0.12.2] set DOWNLOAD_EXT=jar
+    if [!MILL_VERSION!]==[0.12.3] set DOWNLOAD_EXT=jar
+    if [!MILL_VERSION!]==[0.12.4] set DOWNLOAD_EXT=jar
+    if [!MILL_VERSION!]==[0.12.5] set DOWNLOAD_EXT=jar
+    if [!MILL_VERSION!]==[0.12.6] set DOWNLOAD_EXT=jar
+    if [!MILL_VERSION!]==[0.12.7] set DOWNLOAD_EXT=jar
+    if [!MILL_VERSION!]==[0.12.8] set DOWNLOAD_EXT=jar
+    if [!MILL_VERSION!]==[0.12.9] set DOWNLOAD_EXT=jar
+    if [!MILL_VERSION!]==[0.12.10] set DOWNLOAD_EXT=jar
+    if [!MILL_VERSION!]==[0.12.11] set DOWNLOAD_EXT=jar
 
-  unset MILL_TEMP_DOWNLOAD_FILE
-  unset MILL_DOWNLOAD_SUFFIX
-fi
+    set MILL_VERSION_PREFIX=
+    set MILL_SHORT_VERSION_PREFIX=
 
-MILL_FIRST_ARG=""
-if [ "$1" = "--bsp" ] || [ "${1#"-i"}" != "$1" ] || [ "$1" = "--interactive" ] || [ "$1" = "--no-server" ] || [ "$1" = "--no-daemon" ] || [ "$1" = "--help" ] ; then
-  # Need to preserve the first position of those listed options
-  MILL_FIRST_ARG=$1
-  shift
-fi
+    for /F "delims=- tokens=1" %%A in ("!MILL_VERSION!") do set MILL_VERSION_BASE=%%A
+    set MILL_VERSION_MILESTONE=
+    for /F "delims=- tokens=2" %%A in ("!MILL_VERSION!") do set MILL_VERSION_MILESTONE=%%A
+    set MILL_VERSION_MILESTONE_START=!MILL_VERSION_MILESTONE:~0,1!
+    if [!MILL_VERSION_MILESTONE_START!]==[M] (
+        set MILL_VERSION_TAG=!MILL_VERSION_BASE!-!MILL_VERSION_MILESTONE!
+    ) else (
+        set MILL_VERSION_TAG=!MILL_VERSION_BASE!
+    )
+    if [!MILL_DOWNLOAD_FROM_MAVEN!]==[1] (
+        set MILL_DOWNLOAD_URL=https://repo1.maven.org/maven2/com/lihaoyi/mill-dist!ARTIFACT_SUFFIX!/!MILL_VERSION!/mill-dist!ARTIFACT_SUFFIX!-!MILL_VERSION!.!DOWNLOAD_EXT!
+    ) else (
+        set MILL_DOWNLOAD_URL=!MILL_GITHUB_RELEASE_CDN!%MILL_REPO_URL%/releases/download/!MILL_VERSION_TAG!/!MILL_VERSION!!MILL_DOWNLOAD_SUFFIX!
+    )
 
-unset MILL_FINAL_DOWNLOAD_FOLDER
-unset MILL_OLD_DOWNLOAD_PATH
-unset OLD_MILL
-unset MILL_VERSION
-unset MILL_REPO_URL
+    if defined MILL_TEST_DRY_RUN_LAUNCHER_SCRIPT (
+        echo !MILL_DOWNLOAD_URL!
+        echo !MILL!
+        exit /b 0
+    )
 
-# -D mill.main.cli is for compatibility with Mill 0.10.9 - 0.13.0-M2
-# We don't quote MILL_FIRST_ARG on purpose, so we can expand the empty value without quotes
-# shellcheck disable=SC2086
-exec "${MILL}" $MILL_FIRST_ARG -D "mill.main.cli=${MILL_MAIN_CLI}" "$@"
+    rem there seems to be no way to generate a unique temporary file path (on native Windows)
+    if defined MILL_OUTPUT_DIR (
+        set MILL_TEMP_DOWNLOAD_FILE=%MILL_OUTPUT_DIR%\mill-temp-download
+        if not exist "%MILL_OUTPUT_DIR%" mkdir "%MILL_OUTPUT_DIR%"
+    ) else (
+        set MILL_TEMP_DOWNLOAD_FILE=out\mill-bootstrap-download
+        if not exist "out" mkdir "out"
+    )
+
+    echo Downloading mill !MILL_VERSION! from !MILL_DOWNLOAD_URL! ... 1>&2
+
+    curl -f -L "!MILL_DOWNLOAD_URL!" -o "!MILL_TEMP_DOWNLOAD_FILE!"
+
+    if not exist "%MILL_FINAL_DOWNLOAD_FOLDER%" mkdir "%MILL_FINAL_DOWNLOAD_FOLDER%"
+    move /y "!MILL_TEMP_DOWNLOAD_FILE!" "%MILL%"
+
+    set MILL_TEMP_DOWNLOAD_FILE=
+    set MILL_DOWNLOAD_SUFFIX=
+)
+
+set MILL_FINAL_DOWNLOAD_FOLDER=
+set MILL_VERSION=
+set MILL_REPO_URL=
+
+rem Need to preserve the first position of those listed options
+set MILL_FIRST_ARG=
+if [%~1%]==[--bsp] (
+  set MILL_FIRST_ARG=%1%
+) else (
+  if [%~1%]==[-i] (
+    set MILL_FIRST_ARG=%1%
+  ) else (
+    if [%~1%]==[--interactive] (
+      set MILL_FIRST_ARG=%1%
+    ) else (
+      if [%~1%]==[--no-server] (
+        set MILL_FIRST_ARG=%1%
+      ) else (
+        if [%~1%]==[--no-daemon] (
+          set MILL_FIRST_ARG=%1%
+        ) else (
+          if [%~1%]==[--help] (
+            set MILL_FIRST_ARG=%1%
+          )
+        )
+      )
+    )
+  )
+)
+set "MILL_PARAMS=%*%"
+
+if not [!MILL_FIRST_ARG!]==[] (
+  for /f "tokens=1*" %%a in ("%*") do (
+    set "MILL_PARAMS=%%b"
+  )
+)
+
+rem -D mill.main.cli is for compatibility with Mill 0.10.9 - 0.13.0-M2
+"%MILL%" %MILL_FIRST_ARG% -D "mill.main.cli=%MILL_MAIN_CLI%" %MILL_PARAMS%
