@@ -11,6 +11,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - tool: "ant"
+            compileScript: "ant compile"
+            runScript: "ant run"
+            testScript: "ant test"
           - tool: "amper"
             compileScript: "./amper build"
             runScript: "./amper run"
@@ -51,6 +55,12 @@ jobs:
         with:
           java-version: 21
           distribution: temurin
+
+      - name: Setup Ant
+        if: ${{ matrix.tool == 'ant' }}
+        uses: cedx/SetupAnt@v6
+        with:
+          version: =1.10.17
 
       - name: Setup Bazel
         if: ${{ matrix.tool == 'bazel' }}

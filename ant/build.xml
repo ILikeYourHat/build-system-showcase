@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="joke-app"
+         default="run"
+         basedir="."
+         xmlns:ivy="antlib:org.apache.ivy.ant">
+
+    <!-- ========================================================= -->
+    <!-- Ivy setup -->
+    <!-- ========================================================= -->
+
+    <property name="ivy.version" value="2.5.3"/>
+    <property name="ivy.jar.dir" value="${user.home}/.ivy2/jars"/>
+    <property name="ivy.jar.file"
+              value="${ivy.jar.dir}/ivy-${ivy.version}.jar"/>
+
+    <target name="bootstrap-ivy">
+        <mkdir dir="${ivy.jar.dir}"/>
+
+        <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar"
+             dest="${ivy.jar.file}"
+             usetimestamp="true"/>
+    </target>
+
+    <target name="load-ivy" depends="bootstrap-ivy">
+        <taskdef uri="antlib:org.apache.ivy.ant"
+                 resource="org/apache/ivy/ant/antlib.xml">
+            <classpath>
+                <pathelement location="${ivy.jar.file}"/>
+            </classpath>
+        </taskdef>
+    </target>
+
+    <!-- ========================================================= -->
+    <!-- Directory layout -->
+    <!-- ========================================================= -->
+
+    <property name="src.dir" value="src/main/java"/>
+    <property name="resources.dir" value="src/main/resources"/>
+
+    <property name="test.dir" value="src/test/java"/>
+
+    <property name="build.dir" value="build"/>
+
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="test.classes.dir" value="${build.dir}/test-classes"/>
+
+    <property name="lib.dir" value="${build.dir}/lib"/>
+    <property name="reports.dir" value="${build.dir}/test-reports"/>
+
+    <!-- ========================================================= -->
+    <!-- Dependency resolution -->
+    <!-- ========================================================= -->
+
+    <target name="resolve" depends="load-ivy">
+        <ivy:resolve/>
+        <ivy:retrieve pattern="${lib.dir}/[artifact]-[revision].[ext]"/>
+    </target>
+
+    <!-- ========================================================= -->
+    <!-- Compile main sources -->
+    <!-- ========================================================= -->
+
+    <target name="compile" depends="resolve">
+
+        <mkdir dir="${classes.dir}"/>
+
+        <javac srcdir="${src.dir}"
+               destdir="${classes.dir}"
+               includeantruntime="false">
+
+            <classpath>
+                <fileset dir="${lib.dir}" includes="*.jar"/>
+            </classpath>
+        </javac>
+
+        <copy todir="${classes.dir}">
+            <fileset dir="${resources.dir}" />
+        </copy>
+
+    </target>
+
+    <!-- ========================================================= -->
+    <!-- Compile test sources -->
+    <!-- ========================================================= -->
+
+    <target name="compile-tests" depends="compile">
+
+        <mkdir dir="${test.classes.dir}"/>
+
+        <!-- Compile test Java -->
+        <javac srcdir="${test.dir}"
+               destdir="${test.classes.dir}"
+               includeantruntime="false">
+
+            <classpath>
+                <pathelement location="${classes.dir}"/>
+                <fileset dir="${lib.dir}" includes="*.jar"/>
+            </classpath>
+        </javac>
+
+    </target>
+
+    <!-- ========================================================= -->
+    <!-- Run tests -->
+    <!-- ========================================================= -->
+
+    <target name="test" depends="compile-tests">
+
+        <mkdir dir="${reports.dir}"/>
+
+        <java classname="org.junit.platform.console.ConsoleLauncher"
+              fork="true"
+              failonerror="true">
+
+            <classpath>
+                <pathelement location="${classes.dir}"/>
+                <pathelement location="${test.classes.dir}"/>
+                <fileset dir="${lib.dir}" includes="*.jar"/>
+            </classpath>
+
+            <arg value="execute"/>
+            <arg value="--scan-classpath"/>
+            <arg value="--reports-dir=${reports.dir}"/>
+        </java>
+    </target>
+
+    <!-- ========================================================= -->
+    <!-- Run application -->
+    <!-- ========================================================= -->
+
+    <target name="run" depends="compile">
+        <java classname="com.example.JokeApp"
+              fork="true"
+              failonerror="true">
+
+            <classpath>
+                <pathelement location="${classes.dir}"/>
+                <fileset dir="${lib.dir}" includes="*.jar"/>
+            </classpath>
+        </java>
+    </target>
+
+</project>
