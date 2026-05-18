@@ -38,6 +38,7 @@
     <property name="resources.dir" value="src/main/resources"/>
 
     <property name="test.dir" value="src/test/java"/>
+    <property name="test.resources.dir" value="src/test/resources"/>
 
     <property name="build.dir" value="build"/>
 
@@ -87,7 +88,6 @@
 
         <mkdir dir="${test.classes.dir}"/>
 
-        <!-- Compile test Java -->
         <javac srcdir="${test.dir}"
                destdir="${test.classes.dir}"
                includeantruntime="false">
@@ -97,6 +97,10 @@
                 <fileset dir="${lib.dir}" includes="*.jar"/>
             </classpath>
         </javac>
+
+        <copy todir="${test.classes.dir}">
+            <fileset dir="${test.resources.dir}" />
+        </copy>
 
     </target>
 

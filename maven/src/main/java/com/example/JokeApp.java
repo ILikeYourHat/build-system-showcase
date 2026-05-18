@@ -5,23 +5,21 @@ import java.util.Random;
 
 public class JokeApp {
 
-    public static final int NUMBER_OF_JOKES = 3;
-
-    private static final Random random = new Random();
+    private final Random random = new Random();
+    private final JokeLoader jokeLoader = new JokeLoader();
 
     public static void main(String[] args) {
         new JokeApp().tellJoke();
     }
 
     public void tellJoke() {
-        JokeLoader jokeLoader = new JokeLoader();
-        int jokeId = getJokeId();
-        List<String> joke = jokeLoader.loadJoke(jokeId);
+        List<String> joke = getRandomJoke();
         System.out.println("Here goes the joke:");
         joke.forEach(System.out::println);
     }
 
-    private int getJokeId() {
-        return random.nextInt(NUMBER_OF_JOKES) + 1;
+    private List<String> getRandomJoke() {
+        int jokeId = random.nextInt(jokeLoader.getNumberOfJokes()) + 1;
+        return jokeLoader.loadJoke(jokeId);
     }
 }

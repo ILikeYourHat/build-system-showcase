@@ -1,19 +1,21 @@
 package com.example;
 
-import org.apache.commons.io.IOUtils;
-
-import java.io.InputStream;
-import java.nio.charset.Charset;
+import java.io.IOException;
 import java.util.List;
 
 public class JokeLoader {
 
+    private final FileReader fileReader = new FileReader();
+
     public List<String> loadJoke(int id) {
-        InputStream stream = getClass().getClassLoader().getResourceAsStream("joke_" + id + ".txt");
-        if (stream != null) {
-            return IOUtils.readLines(stream, Charset.defaultCharset());
-        } else {
-            throw new RuntimeException("Joke with id " + id + " not found!");
+        try {
+            return fileReader.readFile("joke_" + id + ".txt");
+        } catch (IOException e) {
+            throw new RuntimeException("Joke with id " + id + " not found!", e);
         }
+    }
+
+    public int getNumberOfJokes() {
+        return 3;
     }
 }
