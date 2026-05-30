@@ -48,9 +48,6 @@ jobs:
         if: ${{ matrix.tool == 'sbt' }}
         uses: sbt/setup-sbt@v1
 
-      - name: Compile project
-        run: ${{ matrix.compileScript }}
-
       - name: Verify program
         run: |
           ./mill run
