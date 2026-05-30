@@ -11,4 +11,4 @@ dependencies:
   - commons-io:commons-io:2.22.0
 
 test-dependencies:
-  - org.junit.jupiter:junit-jupiter:6.0.3
+  - org.junit.jupiter:junit-jupiter:6.1.0

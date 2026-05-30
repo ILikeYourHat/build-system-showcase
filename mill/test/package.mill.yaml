@@ -1,2 +1,2 @@
 extends: [JavaTests, TestModule.Junit6]
-jupiterVersion: "6.0.3"
+jupiterVersion: "6.1.0"
