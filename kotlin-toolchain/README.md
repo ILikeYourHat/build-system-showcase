@@ -1,16 +1,16 @@
-# Amper
+# Kotlin Toolchain
 
 Building app:
 ```bash
-./amper build
+./kotlin build
 ```
 
 Running app:
 ```bash
-./amper run
+./kotlin run
 ```
 
 Testing app:
 ```bash
-./amper test
+./kotlin test
 ```
