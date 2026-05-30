@@ -70,7 +70,7 @@ jobs:
         if: ${{ matrix.tool == 'gradle' }}
         uses: gradle/actions/setup-gradle@v6
         with:
-          cache-disabled: true
+          cache-provider: basic
 
       - name: Setup sbt
         if: ${{ matrix.tool == 'sbt' }}
