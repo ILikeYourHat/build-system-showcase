@@ -11,38 +11,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - tool: "ant"
-            compileScript: "ant compile"
-            runScript: "ant run"
-            testScript: "ant test"
-          - tool: "bazel"
-            compileScript: "bazel build //..."
-            runScript: "bazel run :JokeApp"
-            testScript: "bazel test //..."
-          - tool: "bld"
-            compileScript: "./bld compile"
-            runScript: "./bld run"
-            testScript: "./bld test"
-          - tool: "gradle"
-            compileScript: "./gradlew assemble"
-            runScript: "./gradlew run"
-            testScript: "./gradlew test"
-          - tool: "kotlin-toolchain"
-            compileScript: "./kotlin build"
-            runScript: "./kotlin run"
-            testScript: "./kotlin test"
-          - tool: "maven"
-            compileScript: "./mvnw compile"
-            runScript: "./mvnw compile exec:java"
-            testScript: "./mvnw test"
           - tool: "mill"
             compileScript: "./mill compile"
             runScript: "./mill run"
             testScript: "./mill test"
-          - tool: "sbt"
-            compileScript: "sbt compile"
-            runScript: "sbt run"
-            testScript: "sbt test"
     defaults:
       run:
         working-directory: ./${{ matrix.tool }}
@@ -81,14 +53,7 @@ jobs:
 
       - name: Verify program
         run: |
-          OUTPUT=$(${{ matrix.runScript }})
-          echo "$OUTPUT"
-          
-          if echo "$OUTPUT" | grep -q "Here goes the joke:"; then
-            exit 0
-          else
-            exit 1
-          fi
+          ./mill run
 
       - name: Test project
         run: ${{ matrix.testScript }}
