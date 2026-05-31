@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="joke-app"
          default="run"
-         basedir=".."
+         basedir="."
          xmlns:ivy="antlib:org.apache.ivy.ant">
 
     <!-- ========================================================= -->
@@ -42,11 +42,11 @@
 
     <property name="build.dir" value="build"/>
 
-    <property name="classes.dir" value="../build/classes"/>
-    <property name="test.classes.dir" value="../build/test-classes"/>
+    <property name="classes.dir" value="build/classes"/>
+    <property name="test.classes.dir" value="build/test-classes"/>
 
-    <property name="lib.dir" value="../build/lib"/>
-    <property name="reports.dir" value="../build/test-reports"/>
+    <property name="lib.dir" value="build/lib"/>
+    <property name="reports.dir" value="build/test-reports"/>
 
     <!-- ========================================================= -->
     <!-- Dependency resolution -->
@@ -63,18 +63,18 @@
 
     <target name="compile" depends="resolve">
 
-        <mkdir dir="../build/classes"/>
+        <mkdir dir="build/classes"/>
 
         <javac srcdir="${src.dir}"
-               destdir="../build/classes"
+               destdir="build/classes"
                includeantruntime="false">
 
             <classpath>
-                <fileset dir="../build/lib" includes="*.jar"/>
+                <fileset dir="build/lib" includes="*.jar"/>
             </classpath>
         </javac>
 
-        <copy todir="../build/classes">
+        <copy todir="build/classes">
             <fileset dir="src/main/resources" />
         </copy>
 
@@ -86,19 +86,19 @@
 
     <target name="compile-tests" depends="compile">
 
-        <mkdir dir="../build/test-classes"/>
+        <mkdir dir="build/test-classes"/>
 
         <javac srcdir="${test.dir}"
-               destdir="../build/test-classes"
+               destdir="build/test-classes"
                includeantruntime="false">
 
             <classpath>
-                <pathelement location="../build/classes"/>
-                <fileset dir="../build/lib" includes="*.jar"/>
+                <pathelement location="build/classes"/>
+                <fileset dir="build/lib" includes="*.jar"/>
             </classpath>
         </javac>
 
-        <copy todir="../build/test-classes">
+        <copy todir="build/test-classes">
             <fileset dir="src/test/resources" />
         </copy>
 
@@ -110,16 +110,16 @@
 
     <target name="test" depends="compile-tests">
 
-        <mkdir dir="../build/test-reports"/>
+        <mkdir dir="build/test-reports"/>
 
         <java classname="org.junit.platform.console.ConsoleLauncher"
               fork="true"
               failonerror="true">
 
             <classpath>
-                <pathelement location="../build/classes"/>
-                <pathelement location="../build/test-classes"/>
-                <fileset dir="../build/lib" includes="*.jar"/>
+                <pathelement location="build/classes"/>
+                <pathelement location="build/test-classes"/>
+                <fileset dir="build/lib" includes="*.jar"/>
             </classpath>
 
             <arg value="execute"/>
@@ -138,8 +138,8 @@
               failonerror="true">
 
             <classpath>
-                <pathelement location="../build/classes"/>
-                <fileset dir="../build/lib" includes="*.jar"/>
+                <pathelement location="build/classes"/>
+                <fileset dir="build/lib" includes="*.jar"/>
             </classpath>
         </java>
     </target>

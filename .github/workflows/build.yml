@@ -5,7 +5,7 @@ on:
       - '**'
 jobs:
   build-all:
-    name: "Build ${{ matrix.project }} with ${{ matrix.tool }}"
+    name: "Build ${{ matrix.tool }}: ${{ matrix.project }}"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
