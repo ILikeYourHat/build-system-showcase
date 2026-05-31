@@ -27,3 +27,9 @@ java_test_suite(
         "@maven//:org_junit_platform_junit_platform_reporting",
     ]
 )
+
+# Workaround to always use the same command for running app
+alias(
+    name = "Main",
+    actual = "JokeApp",
+)

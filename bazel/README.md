@@ -7,7 +7,7 @@ bazel build //...
 
 Running app:
 ```bash
-bazel run :JokeApp
+bazel run Main
 ```
 
 Testing app:
