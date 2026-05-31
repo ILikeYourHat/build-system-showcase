@@ -5,7 +5,7 @@ settings:
     mainClass: com.example.JokeApp
     release: 21
     test:
-      junitPlatformVersion: 6.0.3
+      junitPlatformVersion: 6.1.0
 
 dependencies:
   - commons-io:commons-io:2.22.0

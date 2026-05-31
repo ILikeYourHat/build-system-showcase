@@ -2,7 +2,6 @@ product: jvm/app
 
 settings:
   jvm:
-    mainClass: com.example.MainKt
     release: 21
   kotlin:
     version: 2.3.21
