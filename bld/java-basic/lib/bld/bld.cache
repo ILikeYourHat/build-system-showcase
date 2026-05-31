@@ -1,0 +1,9 @@
+#Sat May 30 22:40:30 CEST 2026
+bld.dependencies.download.javadoc=false
+bld.dependencies.download.sources=true
+bld.dependencies.hash=7a23ce899eed402bcd8fd9b1df197685384ab436
+bld.extensions.dependency.tree=extensions\:\nno dependencies\n
+bld.extensions.download.javadoc=false
+bld.extensions.download.sources=true
+bld.extensions.hash=2ae23ad15849703787f0e6d00aad28b9479f1a42
+bld.extensions.local=

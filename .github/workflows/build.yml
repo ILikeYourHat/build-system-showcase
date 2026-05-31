@@ -5,47 +5,41 @@ on:
       - '**'
 jobs:
   build-all:
-    name: "Build ${{ matrix.tool }}"
+    name: "Build ${{ matrix.project }} with ${{ matrix.tool }}"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
+          # Ant
           - tool: "ant"
-            compileScript: "ant compile"
-            runScript: "ant run"
-            testScript: "ant test"
+            project: "java-basic"
+          # Bazel
           - tool: "bazel"
-            compileScript: "bazel build //..."
-            runScript: "bazel run :JokeApp"
-            testScript: "bazel test //..."
+            project: "java-basic"
+          # bld
           - tool: "bld"
-            compileScript: "./bld compile"
-            runScript: "./bld run"
-            testScript: "./bld test"
+            project: "java-basic"
+          # Gradle
           - tool: "gradle"
-            compileScript: "./gradlew assemble"
-            runScript: "./gradlew run"
-            testScript: "./gradlew test"
+            project: "java-basic"
+          - tool: "gradle"
+            project: "kotlin-basic"
+          # Kotlin Toolchain
           - tool: "kotlin-toolchain"
-            compileScript: "./kotlin build"
-            runScript: "./kotlin run"
-            testScript: "./kotlin test"
+            project: "java-basic"
+          # Maven
           - tool: "maven"
-            compileScript: "./mvnw compile"
-            runScript: "./mvnw compile exec:java"
-            testScript: "./mvnw test"
+            project: "java-basic"
+          # Mill
           - tool: "mill"
-            compileScript: "./mill compile"
-            runScript: "./mill run"
-            testScript: "./mill test"
+            project: "java-basic"
+          # sbt
           - tool: "sbt"
-            compileScript: "sbt compile"
-            runScript: "sbt run"
-            testScript: "sbt test"
+            project: "java-basic"
     defaults:
       run:
-        working-directory: ./${{ matrix.tool }}
+        working-directory: ./${{ matrix.tool }}/${{ matrix.project }}
     steps:
       - name: Checkout project
         uses: actions/checkout@v6
@@ -76,12 +70,36 @@ jobs:
         if: ${{ matrix.tool == 'sbt' }}
         uses: sbt/setup-sbt@v1
 
+      - name: Extract scripts
+        id: extract
+        working-directory: ./${{ matrix.tool }}
+        run: |
+          extract_block() {
+            local label="$1"
+            local output_name="$2"
+            {
+              echo "${output_name}<<EOF"
+              awk -v label="$label" '
+              $0==label { found=1; next }
+              found && /^```/ {
+              if (!inblock) { inblock=1; next }
+              else exit
+            }
+            found && inblock { print }
+            ' "README.md"
+            echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          }
+          extract_block "Building app:" compile_script
+          extract_block "Running app:" run_script
+          extract_block "Testing app:" test_script
+
       - name: Compile project
-        run: ${{ matrix.compileScript }}
+        run: ${{ steps.extract.outputs.compile_script }}
 
       - name: Verify program
         run: |
-          OUTPUT=$(${{ matrix.runScript }})
+          OUTPUT=$(${{ steps.extract.outputs.run_script }})
           echo "$OUTPUT"
           
           if echo "$OUTPUT" | grep -q "Here goes the joke:"; then
@@ -91,4 +109,4 @@ jobs:
           fi
 
       - name: Test project
-        run: ${{ matrix.testScript }}
+        run: ${{ steps.extract.outputs.test_script }}

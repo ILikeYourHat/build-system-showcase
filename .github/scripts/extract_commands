@@ -1,0 +1,21 @@
+extract_block() {
+    local label="$1"
+    local file="README.md"
+
+    script=$(
+        awk -v label="$label" '
+        $0==label { found=1; next }
+
+        found && /^```/ {
+            if (!inblock) { inblock=1; next }
+            else exit
+        }
+
+        found && inblock { print }
+        ' "$file"
+    )
+
+    echo "$script"
+}
+
+extract_block "Running app:"
