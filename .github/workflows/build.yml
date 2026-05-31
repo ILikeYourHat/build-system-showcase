@@ -28,6 +28,8 @@ jobs:
           # Kotlin Toolchain
           - tool: "kotlin-toolchain"
             project: "java-basic"
+          - tool: "kotlin-toolchain"
+            project: "kotlin-basic"
           # Maven
           - tool: "maven"
             project: "java-basic"
