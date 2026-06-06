@@ -1,4 +1,12 @@
-# TEMPLATE
+# [TOOL NAME]
+
+Official page: [LINK]()
+
+Repository: [LINK]()
+
+---
+
+## Scripts
 
 Building app:
 ```bash

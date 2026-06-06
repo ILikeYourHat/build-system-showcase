@@ -1,4 +1,12 @@
-# MAVEN
+# Maven
+
+Official page: [https://maven.apache.org](https://maven.apache.org)
+
+Repository: [https://github.com/apache/maven](https://github.com/apache/maven)
+
+---
+
+## Scripts
 
 Building app:
 ```bash

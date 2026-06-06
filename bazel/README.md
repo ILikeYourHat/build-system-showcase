@@ -1,4 +1,12 @@
-# BAZEL
+# Bazel
+
+Official page: [https://bazel.build](https://bazel.build)
+
+Repository: [https://github.com/bazelbuild/bazel](https://github.com/bazelbuild/bazel)
+
+---
+
+## Scripts
 
 Building app:
 ```bash
