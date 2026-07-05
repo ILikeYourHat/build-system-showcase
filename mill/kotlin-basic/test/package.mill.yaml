@@ -1,0 +1,4 @@
+extends: [KotlinTests, TestModule.Junit6]
+
+mvnDeps:
+  - org.jetbrains.kotlin:kotlin-test-junit5:2.4.0
