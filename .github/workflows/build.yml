@@ -44,7 +44,7 @@ jobs:
         working-directory: ./${{ matrix.tool }}/${{ matrix.project }}
     steps:
       - name: Checkout project
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Java
         uses: actions/setup-java@v5
