@@ -1,6 +1,6 @@
 [versions]
 apache-commons-io = "2.22.0"
-junit = "6.1.1"
+junit = "6.1.3"
 
 [libraries]
 apache-commons-io = { module = "commons-io:commons-io", version.ref = "apache-commons-io" }

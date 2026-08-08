@@ -24,8 +24,8 @@ public class JokeAppBuild extends Project {
         scope(compile)
             .include(dependency("commons-io", "commons-io", version(2,22,0)));
         scope(test)
-            .include(dependency("org.junit.jupiter", "junit-jupiter-engine", version(6,1,1)))
-            .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(6,1,1)));
+            .include(dependency("org.junit.jupiter", "junit-jupiter-engine", version(6,1,3)))
+            .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(6,1,3)));
     }
 
     public static void main(String[] args) {
