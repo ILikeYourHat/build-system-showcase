@@ -1,0 +1,36 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_binary", "kt_jvm_test")
+
+package(default_visibility = ["//visibility:public"])
+
+kt_jvm_binary(
+    name = "JokeApp",
+    main_class = "com.example.MainKt",
+    srcs = glob(["src/main/kotlin/**/*.kt"]),
+    resources = glob(["src/main/resources/**"])
+)
+
+kt_jvm_test(
+    name = "JokeAppTest",
+    srcs = glob(["src/test/kotlin/**/*.kt"]),
+    resources = glob(["src/test/resources/**"]),
+    main_class = "org.junit.platform.console.ConsoleLauncher",
+        args = [
+            "execute",
+            "--fail-if-no-tests",
+            "--select-package=com.example",
+        ],
+    deps = [
+        ":JokeApp",
+        "@rules_kotlin//kotlin/compiler:kotlin-test",
+        "@maven//:org_jetbrains_kotlin_kotlin_test_junit5",
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+        "@maven//:org_junit_platform_junit_platform_launcher",
+        "@maven//:org_junit_platform_junit_platform_console",
+    ]
+)
+
+# Workaround to always use the same command for running app
+alias(
+    name = "Main",
+    actual = "JokeApp",
+)

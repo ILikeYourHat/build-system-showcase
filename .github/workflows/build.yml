@@ -17,6 +17,8 @@ jobs:
           # Bazel
           - tool: "bazel"
             project: "java-basic"
+          - tool: "bazel"
+            project: "kotlin-basic"
           # bld
           - tool: "bld"
             project: "java-basic"
