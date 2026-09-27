@@ -43,6 +43,8 @@ jobs:
           # sbt
           - tool: "sbt"
             project: "java-basic"
+          - tool: "sbt"
+            project: "scala-basic"
     defaults:
       run:
         working-directory: ./${{ matrix.tool }}/${{ matrix.project }}
