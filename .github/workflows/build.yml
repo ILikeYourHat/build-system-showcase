@@ -49,16 +49,16 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: 21
           distribution: temurin
 
       - name: Setup Ant
         if: ${{ matrix.tool == 'ant' }}
-        uses: cedx/SetupAnt@v6
+        uses: cedx/SetupAnt@v7
         with:
-          version: =1.10.17
+          version: =1.10.18
 
       - name: Setup Bazel
         if: ${{ matrix.tool == 'bazel' }}
