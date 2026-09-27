@@ -1,6 +1,6 @@
-build
-lib/*
-!lib/bld
-lib/bld/*
-!lib/bld/bld-wrapper.jar
-!lib/bld/bld-wrapper.properties
+**/build
+**/lib/*
+!**/lib/bld
+**/lib/bld/*
+!**/lib/bld/bld-wrapper.jar
+!**/lib/bld/bld-wrapper.properties
