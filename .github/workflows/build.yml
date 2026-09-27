@@ -40,6 +40,8 @@ jobs:
             project: "java-basic"
           - tool: "mill"
             project: "kotlin-basic"
+          - tool: "mill"
+            project: "scala-basic"
           # sbt
           - tool: "sbt"
             project: "java-basic"
