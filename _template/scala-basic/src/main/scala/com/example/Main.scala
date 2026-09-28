@@ -4,7 +4,7 @@ import scala.util.Random
 
 private val jokeLoader = JokeLoader()
 
-@main def tellJoke() =
+@main def main() =
   val joke = getRandomJoke()
   println("Here goes the joke:")
   joke.foreach(println(_))

@@ -27,6 +27,8 @@ jobs:
             project: "java-basic"
           - tool: "gradle"
             project: "kotlin-basic"
+          - tool: "gradle"
+            project: "scala-basic"
           # Kotlin Toolchain
           - tool: "kotlin-toolchain"
             project: "java-basic"
