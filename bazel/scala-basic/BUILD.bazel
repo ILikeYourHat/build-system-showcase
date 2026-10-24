@@ -1,0 +1,26 @@
+load("@rules_scala//scala:scala.bzl", "scala_binary", "scala_test")
+
+package(default_visibility = ["//visibility:public"])
+
+scala_binary(
+    name = "JokeApp",
+    main_class = "com.example.main",
+    srcs = glob(["src/main/scala/**/*.scala"]),
+    resources = glob(["src/main/resources/**"])
+)
+
+scala_test(
+    name = "JokeAppTest",
+    srcs = glob(["src/test/scala/**/*.scala"]),
+    deps = [
+        ":JokeApp",
+        "@maven//:org_scalatest_scalatest_3",
+    ],
+    resources = glob(["src/test/resources/**"])
+)
+
+# Workaround to always use the same command for running app
+alias(
+    name = "Main",
+    actual = "JokeApp",
+)
