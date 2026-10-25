@@ -113,7 +113,7 @@ jobs:
 
       - name: Verify program
         run: |
-          OUTPUT=$(${{ steps.extract.outputs.run_script }})
+          OUTPUT=$(${{ steps.extract.outputs.run_script }} 2>&1)
           echo "$OUTPUT"
           
           if echo "$OUTPUT" | grep -q "Here goes the joke:"; then
