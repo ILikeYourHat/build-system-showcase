@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DIR="${1:?Usage: $0 <relative-directory>}"
+
+if [[ ! -d "$DIR" ]]; then
+    echo "Error: Directory not found: $DIR" >&2
+    exit 1
+fi
+
+find "$DIR" -type f -name '*.class' -print0 |
+while IFS= read -r -d '' file; do
+    version=$(javap -verbose "$file" 2>/dev/null |
+        awk '/major version:/ { print $3; exit }')
+
+    echo "$file: ${version:-unknown}"
+done
