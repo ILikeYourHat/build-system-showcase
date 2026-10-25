@@ -1,4 +1,4 @@
 extends: KotlinModule
 
-kotlinVersion: 2.4.20
+kotlinVersion: 2.4.21
 jvmVersion: 21
