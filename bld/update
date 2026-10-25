@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+  echo "Usage: $0 <version>" >&2
+  exit 1
+fi
+
+version=$1
+
+semver_regex='^([0-9]*)\.([0-9]*)\.([0-9]*))?$'
+
+if [[ ! $version =~ $semver_regex ]]; then
+  echo "Invalid SemVer version: $version" >&2
+  exit 1
+fi
+
+for dir in */; do
+  [[ -d "$dir" ]] || continue
+  cd $dir
+  filepath=$(mktemp -u -t "bld-$version-XXXXXX.jar")
+  curl -L -s "https://github.com/rife2/bld/releases/download/$version/bld-$version.jar" > "$filepath"
+  java -jar "$filepath" upgrade
+  rm -f "$filepath"
+  ./bld compile
+  cd ..
+done
+
+echo -e "\nbld versions updated to $version!"
