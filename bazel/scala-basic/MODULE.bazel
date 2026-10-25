@@ -3,7 +3,7 @@ bazel_dep(name = "rules_jvm_external", version = "7.1")
 
 scala_config = use_extension("@rules_scala//scala/extensions:config.bzl", "scala_config")
 scala_config.settings(
-    scala_version = "3.9.0",
+    scala_version = "3.10.0",
 )
 
 scala_deps = use_extension("@rules_scala//scala/extensions:deps.bzl", "scala_deps")

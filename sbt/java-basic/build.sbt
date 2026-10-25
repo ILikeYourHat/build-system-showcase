@@ -1,5 +1,3 @@
-scalaVersion := "3.9.0"
-
 name := "Joke App"
 
 javacOptions ++= Seq("--release", "21")
