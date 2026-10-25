@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 2 ]]; then
+  echo "Usage: $0 <tool> <version>" >&2
+  exit 1
+fi
+
+tool=$1
+version=$2
+
+semver_regex='^([0-9]*)\.([0-9]*)\.([0-9]*))?$'
+if [[ ! $version =~ $semver_regex ]]; then
+  echo "Invalid version: $version" >&2
+  exit 1
+fi
+
+update_ant() {
+  echo "Ant has no way to update it's version per project"
+  exit 1
+}
+
+update_bazel() {
+  printf "%s\n" "$version" > .bazelversion
+  bazel build //...
+}
+
+update_bld() {
+  filepath=$(mktemp -u -t "bld-$version-XXXXXX.jar")
+  curl -L -s "https://github.com/rife2/bld/releases/download/$version/bld-$version.jar" > "$filepath"
+  java -jar "$filepath" upgrade
+  rm -f "$filepath"
+  ./bld compile
+}
+
+update_gradle() {
+  ./gradlew :wrapper --gradle-version="$version" && ./gradlew :wrapper
+  ./gradlew build
+}
+
+update_kotlin_toolchain() {
+  ./kotlin update --target-version="$version"
+  ./kotlin build
+}
+
+update_maven() {
+  ./mvnw wrapper:wrapper -Dmaven="$version"
+  ./mvnw compile
+}
+
+update_mill() {
+  ./mill updateMillScripts "$version"
+  ./mill compile
+}
+
+update_sbt() {
+  printf "sbt.version=%s\n" "$version" > project/build.properties
+  sbt compile
+}
+
+case "$tool" in
+      "ant")
+           update_script=update_ant ;;
+      "bazel")
+           update_script=update_bazel ;;
+      "bld")
+           update_script=update_bld ;;
+      "gradle")
+           update_script=update_gradle ;;
+      "kotlin-toolchain")
+           update_script=update_kotlin_toolchain ;;
+      "maven")
+           update_script=update_maven ;;
+      "mill")
+           update_script=update_mill ;;
+      "sbt")
+           update_script=update_sbt ;;
+      *)
+        echo "Update script for $tool not implemented!"
+        exit 1 ;;
+esac
+
+cd "$tool"
+for dir in *; do
+  [[ -d "$dir" ]] || continue
+  cd "$dir"
+  echo "Updating $tool/$dir..."
+  "$update_script"
+  echo "Updated $tool/$dir to $version"
+  cd ..
+done
+
