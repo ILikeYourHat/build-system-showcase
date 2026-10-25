@@ -5,6 +5,12 @@
          xmlns:ivy="antlib:org.apache.ivy.ant">
 
     <!-- ========================================================= -->
+    <!-- JDK version -->
+    <!-- ========================================================= -->
+
+    <property name="version.jdk" value="21"/>
+
+    <!-- ========================================================= -->
     <!-- Ivy setup -->
     <!-- ========================================================= -->
 
@@ -67,6 +73,8 @@
 
         <javac srcdir="${src.dir}"
                destdir="build/classes"
+               target="${version.jdk}"
+               source="${version.jdk}"
                includeantruntime="false">
 
             <classpath>
@@ -90,6 +98,8 @@
 
         <javac srcdir="${test.dir}"
                destdir="build/test-classes"
+               target="${version.jdk}"
+               source="${version.jdk}"
                includeantruntime="false">
 
             <classpath>
