@@ -72,7 +72,7 @@ jobs:
 
       - name: Setup Bazel
         if: ${{ matrix.tool == 'bazel' }}
-        uses: bazel-contrib/setup-bazel@0.19.1
+        uses: bazel-contrib/setup-bazel@0.19.2
 
       - name: Setup Gradle
         if: ${{ matrix.tool == 'gradle' }}
